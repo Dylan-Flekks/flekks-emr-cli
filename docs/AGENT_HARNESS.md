@@ -1,8 +1,8 @@
 # Medical Agent Harness
 
-The medical agent harness is the structured bridge between the local chart repository, the Ratatui dashboard, and optional OpenAI API calls.
+The medical agent harness is the structured bridge between the local chart repository, the Ratatui dashboard, local multimodal datasets, optional local desktop automation, and optional model-provider API calls.
 
-The harness is not a generic coding agent. It is a medical documentation assistant that must obey local-only storage, auditability, and BAA-gated PHI boundaries.
+The harness is not a generic coding agent and should not be limited to one vendor, one model, one billing workflow, or one local application. It is a model-agnostic medical workflow harness that must obey local-only storage, auditability, human review, and BAA-gated PHI boundaries.
 
 ## Goals
 
@@ -10,6 +10,9 @@ The harness is not a generic coding agent. It is a medical documentation assista
 - Help audit notes before signing.
 - Help prepare billing-support drafts.
 - Keep the TUI informed about agent state.
+- Support bounded long-running and recursive agent loops.
+- Support local multimodal inputs such as text, PDFs, screenshots, scanned documents, and voice memos.
+- Support user-authorized local desktop software interactions through generic UI automation abstractions.
 - Prevent outbound PHI unless compliance checks pass.
 - Keep all chart source-of-truth data local in SQLite.
 
@@ -20,12 +23,13 @@ med-agent
   agent turn state
   tool registry
   medical tool names
-  BAA preflight before outbound OpenAI calls
+  BAA preflight before outbound model calls
+  long-running loop controls
   TUI-facing agent events
 
 med-ai
   provider abstraction
-  OpenAI/OpenAI-compatible API boundary
+  model-provider API boundary
   request/response structs
 
 med-store
@@ -54,6 +58,30 @@ TUI/CLI request
   -> append audit events
 ```
 
+## Recursive Loop Model
+
+Long-running agent loops must be bounded, inspectable, and interruptible.
+
+```text
+observe local state
+  -> plan next step
+  -> run allowed local tool
+  -> verify result
+  -> update local memory/state
+  -> decide continue | wait for approval | stop
+```
+
+Required loop controls:
+
+- maximum step count
+- maximum wall-clock duration
+- cancellation from TUI/CLI
+- human approval checkpoints
+- local audit trail
+- PHI-safe logs
+- explicit blocked state with reason
+- no irreversible action without confirmation
+
 ## Initial Tool Set
 
 ```text
@@ -65,20 +93,25 @@ note.update_draft
 note.run_documentation_audit
 billing.prepare_superbill_draft
 compliance.check_vendor_baa
-ai.draft_note_with_openai
+ai.draft_note_with_provider
+desktop.observe_window
+desktop.propose_action
+desktop.verify_state
+audio.import_voice_memo
+document.extract_text
 ```
 
-All chart, note, audit, and billing tools are local. The only outbound tool is the OpenAI draft call, and it is disabled for PHI until the BAA gate passes.
+Chart, note, audit, billing, desktop observation, document extraction, and local memory tools are local. Outbound AI tools are disabled for PHI until the BAA gate passes.
 
-## OpenAI API Boundary
+## Model Provider Boundary
 
-The OpenAI API adapter must not be called directly from UI code.
+Model-provider adapters must not be called directly from UI code. OpenAI is one provider, not the harness itself.
 
 Required preflight:
 
 ```text
 if request.contains_phi:
-  require provider == openai or configured OpenAI-compatible provider
+  require configured model provider
   require local vendor compliance record exists
   require BAA status == executed
   require requested service/model is covered
@@ -86,6 +119,41 @@ if request.contains_phi:
   append attempted AI audit event
   block if any check fails
 ```
+
+## Local Desktop Automation Boundary
+
+The harness may eventually operate user-authorized local desktop software in the same way a user would interact with it: observe the screen/window, propose an action, request approval when needed, perform a bounded action, then verify state.
+
+Public Flekks EMR CLI documentation must stay vendor-neutral. Do not name or imply official integration with proprietary desktop medical or billing software unless the project has explicit permission and a reviewed integration strategy.
+
+Allowed public language:
+
+- local desktop software
+- user-authorized local applications
+- generic UI automation
+- local billing software workflows
+- supervised data entry
+
+Avoid public language:
+
+- naming proprietary software vendors or products
+- implying partnership, endorsement, or official compatibility
+- claiming automated submission or final billing authority
+
+All local automation must be:
+
+- user-authorized
+- window/process allowlisted
+- auditable
+- interruptible
+- reversible where possible
+- confirmed by a human before submission, signing, export, or irreversible changes
+
+## Multimodal Boundary
+
+The harness may process local multimodal datasets such as PDFs, screenshots, scanned documents, and voice memos for documentation support and workflow automation.
+
+Medical image interpretation is not an MVP goal. Do not position the project as software that diagnoses, interprets radiology, or performs autonomous clinical image review. Any future medical-image feature must be reviewed for clinical, regulatory, privacy, and safety requirements before implementation.
 
 ## Dashboard Integration
 
