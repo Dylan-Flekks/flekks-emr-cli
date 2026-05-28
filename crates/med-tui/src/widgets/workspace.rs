@@ -25,7 +25,7 @@ pub fn render(frame: &mut Frame<'_>, area: Rect, app: &App) {
 
     match app.selected_tab {
         WorkspaceTab::Chart => render_chart(frame, chunks[2], app),
-        WorkspaceTab::Note => render_note(frame, chunks[2]),
+        WorkspaceTab::Note => render_note(frame, chunks[2], app),
         WorkspaceTab::Audit => render_audit(frame, chunks[2], app),
         WorkspaceTab::Billing => render_billing(frame, chunks[2], app),
     }
@@ -65,13 +65,19 @@ fn render_summary(frame: &mut Frame<'_>, area: Rect, app: &App) {
     let status = patient
         .map(|patient| patient.status.as_str())
         .unwrap_or("-");
+    let active_encounter = app
+        .active_encounter()
+        .map(|encounter| format!("{} | {}", encounter.encounter_type, encounter.status))
+        .unwrap_or_else(|| "None".to_owned());
 
     let summary = Paragraph::new(vec![
         Line::from(vec![Span::styled(
             name,
             Style::default().add_modifier(Modifier::BOLD),
         )]),
-        Line::from(format!("MRN: {mrn}  |  Active encounter: Office visit")),
+        Line::from(format!(
+            "MRN: {mrn}  |  Active encounter: {active_encounter}"
+        )),
         Line::from(format!("Status: {status}")),
     ])
     .block(
@@ -85,46 +91,76 @@ fn render_summary(frame: &mut Frame<'_>, area: Rect, app: &App) {
 }
 
 fn render_chart(frame: &mut Frame<'_>, area: Rect, app: &App) {
-    let rows = app
-        .data
-        .problems
-        .iter()
-        .map(|problem| Row::new([problem.as_str(), "Active", "needs review"]));
+    if app.data.encounters.is_empty() {
+        let empty = Paragraph::new("No local encounters")
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Encounters")
+                    .border_style(theme::panel_border(app.focus, FocusArea::Workspace)),
+            )
+            .wrap(Wrap { trim: true });
+
+        frame.render_widget(empty, area);
+        return;
+    }
+
+    let rows = app.data.encounters.iter().map(|encounter| {
+        Row::new([
+            encounter.short_id.as_str(),
+            encounter.started_at.as_str(),
+            encounter.encounter_type.as_str(),
+            encounter.status.as_str(),
+            encounter.reason.as_str(),
+        ])
+    });
 
     let table = Table::new(
         rows,
         [
-            Constraint::Percentage(48),
+            Constraint::Length(10),
+            Constraint::Length(12),
+            Constraint::Percentage(24),
             Constraint::Percentage(22),
-            Constraint::Percentage(30),
+            Constraint::Percentage(32),
         ],
     )
-    .header(Row::new(["Problem", "Status", "Documentation"]))
+    .header(Row::new(["ID", "Started", "Type", "Status", "Reason"]))
     .block(
         Block::default()
             .borders(Borders::ALL)
-            .title("Clinical Chart")
+            .title("Encounters")
             .border_style(theme::panel_border(app.focus, FocusArea::Workspace)),
     );
 
     frame.render_widget(table, area);
 }
 
-fn render_note(frame: &mut Frame<'_>, area: Rect) {
+fn render_note(frame: &mut Frame<'_>, area: Rect, app: &App) {
+    let encounter_context = app
+        .active_encounter()
+        .map(|encounter| {
+            format!(
+                "{} | {} | {}",
+                encounter.started_at, encounter.encounter_type, encounter.status
+            )
+        })
+        .unwrap_or_else(|| "No active encounter".to_owned());
     let text = [
         "SOAP Note - Draft",
+        encounter_context.as_str(),
         "",
         "Subjective:",
-        "  Synthetic patient reports improving symptoms.",
+        "",
         "",
         "Objective:",
-        "  Vitals and exam findings pending.",
+        "",
         "",
         "Assessment:",
-        "  Link assessment to diagnosis codes before signing.",
+        "",
         "",
         "Plan:",
-        "  Complete plan and run documentation audit.",
+        "",
     ]
     .join("\n");
 

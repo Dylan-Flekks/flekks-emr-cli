@@ -21,11 +21,18 @@ pub fn render(frame: &mut Frame<'_>, area: Rect, app: &App) {
         " tabs  ".into(),
         " j/k ".black().on_cyan(),
         " select  ".into(),
+        " n ".black().on_cyan(),
+        " patient  ".into(),
+        " e ".black().on_cyan(),
+        " encounter  ".into(),
+        " r ".black().on_cyan(),
+        " refresh  ".into(),
         format!(" focus: {} ", app.focus.title())
             .black()
             .on_dark_gray(),
         " PHI local-only ".black().on_green(),
         ai.black().on_yellow(),
+        format!(" {} ", app.last_message).black().on_dark_gray(),
     ]);
 
     frame.render_widget(Paragraph::new(status), area);

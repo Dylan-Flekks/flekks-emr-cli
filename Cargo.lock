@@ -649,7 +649,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "crossterm 0.29.0",
+ "med-core",
+ "med-store",
  "ratatui",
+ "time",
  "tui-textarea",
 ]
 

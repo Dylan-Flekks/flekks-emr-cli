@@ -107,7 +107,10 @@ fn main() -> Result<()> {
                 "Do not store PHI until SQLCipher/key handling has been configured and reviewed."
             );
         }
-        Command::Tui => med_tui::run()?,
+        Command::Tui => {
+            let store = open_store()?;
+            med_tui::run(store)?;
+        }
         Command::Patient { command } => match command {
             PatientCommand::List => {
                 let store = open_store()?;

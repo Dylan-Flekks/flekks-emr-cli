@@ -7,15 +7,16 @@ use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
+use med_store::LocalStore;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
 use crate::app::App;
 use crate::ui;
 
-pub fn run() -> Result<()> {
+pub fn run(store: LocalStore) -> Result<()> {
     let mut terminal = setup_terminal()?;
-    let result = run_app(&mut terminal);
+    let result = run_app(&mut terminal, &store);
     restore_terminal(&mut terminal)?;
     result
 }
@@ -35,8 +36,8 @@ fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result
     Ok(())
 }
 
-fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
-    let mut app = App::default();
+fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, store: &LocalStore) -> Result<()> {
+    let mut app = App::from_store(store)?;
 
     while !app.should_quit {
         terminal.draw(|frame| ui::render(frame, &app))?;
@@ -44,7 +45,7 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
         if event::poll(Duration::from_millis(200))? {
             if let CrosstermEvent::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
-                    app.handle_key(key);
+                    app.handle_key_with_store(key, store)?;
                 }
             }
         }
