@@ -21,6 +21,7 @@
 - Add bounded agent-loop state with local audit events.
 - Add local voice memo import pipeline for documentation drafts.
 - Add local document/screenshot text extraction for workflow support.
+- Define macOS-first local desktop automation capability profiles.
 
 ## Later
 
@@ -28,7 +29,8 @@
 - Claim file generation experiments.
 - Local-only model provider integration.
 - Model-provider catalog with BAA-aware enablement.
-- Local desktop automation framework for user-authorized applications.
+- macOS accessibility adapter for user-authorized local applications.
+- Cross-platform desktop automation adapters after macOS capability profiles are proven.
 - Local plugin/MCP architecture.
 - Local memory for templates, preferences, workflow state, and payer rules.
 - Role-based access controls.

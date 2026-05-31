@@ -10,15 +10,17 @@ pub mod desktop;
 pub mod tools;
 
 pub use desktop::{
-    AccessibilityTreeCompleteness, AutomationBounds, ControlRole, ControlSelector,
-    CoordinateFallbackPolicy, DesktopActionApproval, DesktopActionClass, DesktopActionIntent,
-    DesktopActionKind, DesktopActionProposal, DesktopActionProposer, DesktopActionResult,
-    DesktopActionRisk, DesktopActionStatus, DesktopActor, DesktopApprovalDecision,
-    DesktopAuthorization, DesktopAutomationError, DesktopAutomationPolicy, DesktopCaptureSummary,
-    DesktopObservation, DesktopObservationMode, DesktopObservationRequest, DesktopObserver,
-    DesktopPlatform, DesktopTargetId, DesktopTargetPolicy, DesktopVerification,
-    DesktopVerificationExpectation, DesktopVerificationRequest, DesktopVerificationStatus,
-    DesktopVerifier, IrreversibleActionKind, PhiCapturePolicy, ScreenRect, SensitiveValueRef,
+    AccessibilityTreeCompleteness, AutomationBounds, CaptureTimePhiHandling, ControlRole,
+    ControlSelector, CoordinateFallbackPolicy, DesktopActionApproval, DesktopActionClass,
+    DesktopActionIntent, DesktopActionKind, DesktopActionProposal, DesktopActionProposer,
+    DesktopActionResult, DesktopActionRisk, DesktopActionStatus, DesktopActor,
+    DesktopApprovalDecision, DesktopAuthorization, DesktopAutomationError, DesktopAutomationPolicy,
+    DesktopCapabilityProfile, DesktopCaptureSummary, DesktopObservation, DesktopObservationMode,
+    DesktopObservationRequest, DesktopObserver, DesktopPlatform, DesktopTargetId,
+    DesktopTargetPolicy, DesktopVerification, DesktopVerificationExpectation,
+    DesktopVerificationRequest, DesktopVerificationStatus, DesktopVerifier, IrreversibleActionKind,
+    PhiCapturePolicy, ScreenRect, SemanticActionCapability, SensitiveValueRef,
+    VisualFallbackCapability,
 };
 pub use tools::{
     MedicalApprovalDecision, MedicalApprovalPolicy, MedicalToolContext, MedicalToolError,

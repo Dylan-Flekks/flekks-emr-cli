@@ -39,6 +39,7 @@ pub struct DesktopTargetPolicy {
     pub process_name: String,
     pub executable_hash_sha256: Option<String>,
     pub window_class: Option<String>,
+    pub capability_profile: DesktopCapabilityProfile,
     pub authorization: DesktopAuthorization,
     pub minimum_tree_completeness: AccessibilityTreeCompleteness,
     pub allowed_observation_modes: Vec<DesktopObservationMode>,
@@ -54,6 +55,57 @@ impl DesktopTargetPolicy {
     pub fn allows_action_class(&self, class: DesktopActionClass) -> bool {
         self.allowed_action_classes.contains(&class)
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DesktopCapabilityProfile {
+    pub profile_id: String,
+    pub assessed_at: OffsetDateTime,
+    pub tree_completeness: AccessibilityTreeCompleteness,
+    pub semantic_actions: SemanticActionCapability,
+    pub capture_time_phi_handling: CaptureTimePhiHandling,
+    pub visual_fallback: VisualFallbackCapability,
+}
+
+impl DesktopCapabilityProfile {
+    pub fn allows_action_class(&self, action_class: DesktopActionClass) -> bool {
+        match self.semantic_actions {
+            SemanticActionCapability::Unknown
+            | SemanticActionCapability::NotSupported
+            | SemanticActionCapability::ObserveOnly => false,
+            SemanticActionCapability::NonIrreversibleActions => !action_class.is_irreversible(),
+            SemanticActionCapability::IrreversibleActionsWithConfirmation => true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SemanticActionCapability {
+    Unknown,
+    NotSupported,
+    ObserveOnly,
+    NonIrreversibleActions,
+    IrreversibleActionsWithConfirmation,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CaptureTimePhiHandling {
+    Unknown,
+    Required,
+    Verified,
+}
+
+impl CaptureTimePhiHandling {
+    pub fn can_capture_safely(self) -> bool {
+        matches!(self, Self::Required | Self::Verified)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum VisualFallbackCapability {
+    Disabled,
+    ObserveOnly,
+    ExplicitPolicyRequired,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,12 +164,21 @@ pub enum PhiCapturePolicy {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DesktopAutomationPolicy {
+    supported_platforms: Vec<DesktopPlatform>,
     targets: HashMap<DesktopTargetId, DesktopTargetPolicy>,
 }
 
 impl DesktopAutomationPolicy {
     pub fn empty() -> Self {
         Self {
+            supported_platforms: vec![DesktopPlatform::Macos],
+            targets: HashMap::new(),
+        }
+    }
+
+    pub fn with_supported_platforms(platforms: impl IntoIterator<Item = DesktopPlatform>) -> Self {
+        Self {
+            supported_platforms: platforms.into_iter().collect(),
             targets: HashMap::new(),
         }
     }
@@ -138,12 +199,17 @@ impl DesktopAutomationPolicy {
         self.targets.get(target_id)
     }
 
+    pub fn supports_platform(&self, platform: DesktopPlatform) -> bool {
+        self.supported_platforms.contains(&platform)
+    }
+
     pub fn evaluate_observation_request(
         &self,
         request: &DesktopObservationRequest,
         now: OffsetDateTime,
     ) -> Result<(), DesktopAutomationError> {
         let target = self.require_target(&request.target_id)?;
+        self.evaluate_target_scope(target)?;
 
         if !target.authorization.is_active_at(now) {
             return Err(DesktopAutomationError::AuthorizationExpired(
@@ -166,6 +232,7 @@ impl DesktopAutomationPolicy {
         observation: &DesktopObservation,
     ) -> Result<(), DesktopAutomationError> {
         let target = self.require_target(&observation.target_id)?;
+        self.evaluate_target_scope(target)?;
 
         if !observation
             .tree_completeness
@@ -184,6 +251,16 @@ impl DesktopAutomationPolicy {
             ));
         }
 
+        if !target
+            .capability_profile
+            .capture_time_phi_handling
+            .can_capture_safely()
+        {
+            return Err(DesktopAutomationError::CapabilityProfileLacksPhiCapture(
+                target.id.clone(),
+            ));
+        }
+
         Ok(())
     }
 
@@ -193,6 +270,7 @@ impl DesktopAutomationPolicy {
         now: OffsetDateTime,
     ) -> Result<(), DesktopAutomationError> {
         let target = self.require_target(&proposal.target_id)?;
+        self.evaluate_target_scope(target)?;
 
         if !target.authorization.is_active_at(now) {
             return Err(DesktopAutomationError::AuthorizationExpired(
@@ -203,6 +281,13 @@ impl DesktopAutomationPolicy {
         let action_class = proposal.action.class();
         if !target.allows_action_class(action_class) {
             return Err(DesktopAutomationError::ActionClassBlocked {
+                target_id: proposal.target_id.clone(),
+                action_class,
+            });
+        }
+
+        if !target.capability_profile.allows_action_class(action_class) {
+            return Err(DesktopAutomationError::CapabilityProfileBlocksAction {
                 target_id: proposal.target_id.clone(),
                 action_class,
             });
@@ -273,6 +358,32 @@ impl DesktopAutomationPolicy {
         self.targets
             .get(target_id)
             .ok_or_else(|| DesktopAutomationError::TargetNotAllowlisted(target_id.clone()))
+    }
+
+    fn evaluate_target_scope(
+        &self,
+        target: &DesktopTargetPolicy,
+    ) -> Result<(), DesktopAutomationError> {
+        if !self.supports_platform(target.platform) {
+            return Err(DesktopAutomationError::PlatformOutOfScope {
+                target_id: target.id.clone(),
+                platform: target.platform,
+            });
+        }
+
+        if !target
+            .capability_profile
+            .tree_completeness
+            .satisfies(target.minimum_tree_completeness)
+        {
+            return Err(DesktopAutomationError::CapabilityProfileTooWeak {
+                target_id: target.id.clone(),
+                observed: target.capability_profile.tree_completeness,
+                required: target.minimum_tree_completeness,
+            });
+        }
+
+        Ok(())
     }
 }
 
@@ -462,6 +573,20 @@ impl From<IrreversibleActionKind> for DesktopActionClass {
     }
 }
 
+impl DesktopActionClass {
+    pub fn is_irreversible(self) -> bool {
+        matches!(
+            self,
+            Self::Sign
+                | Self::Submit
+                | Self::Export
+                | Self::Delete
+                | Self::Finalize
+                | Self::OtherIrreversible
+        )
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DesktopActionRisk {
     Low,
@@ -626,6 +751,12 @@ pub enum DesktopAutomationError {
     #[error("desktop automation target is not allowlisted: {0}")]
     TargetNotAllowlisted(DesktopTargetId),
 
+    #[error("desktop automation platform {platform:?} is out of scope for target: {target_id}")]
+    PlatformOutOfScope {
+        target_id: DesktopTargetId,
+        platform: DesktopPlatform,
+    },
+
     #[error("desktop automation authorization expired for target: {0}")]
     AuthorizationExpired(DesktopTargetId),
 
@@ -644,11 +775,31 @@ pub enum DesktopAutomationError {
         required: AccessibilityTreeCompleteness,
     },
 
+    #[error(
+        "desktop capability profile for target {target_id} has tree completeness {observed:?}, below required {required:?}"
+    )]
+    CapabilityProfileTooWeak {
+        target_id: DesktopTargetId,
+        observed: AccessibilityTreeCompleteness,
+        required: AccessibilityTreeCompleteness,
+    },
+
+    #[error("desktop capability profile lacks capture-time PHI handling for target: {0}")]
+    CapabilityProfileLacksPhiCapture(DesktopTargetId),
+
     #[error("desktop observation did not handle PHI at capture time: {0}")]
     PhiCaptureNotHandledAtCapture(String),
 
     #[error("desktop action class {action_class:?} is blocked for target: {target_id}")]
     ActionClassBlocked {
+        target_id: DesktopTargetId,
+        action_class: DesktopActionClass,
+    },
+
+    #[error(
+        "desktop capability profile blocks action class {action_class:?} for target: {target_id}"
+    )]
+    CapabilityProfileBlocksAction {
         target_id: DesktopTargetId,
         action_class: DesktopActionClass,
     },
@@ -698,10 +849,18 @@ mod tests {
     fn target_policy() -> DesktopTargetPolicy {
         DesktopTargetPolicy {
             id: target_id(),
-            platform: DesktopPlatform::Windows,
-            process_name: "local-demo-app.exe".to_owned(),
+            platform: DesktopPlatform::Macos,
+            process_name: "LocalDemoApp".to_owned(),
             executable_hash_sha256: Some("synthetic-hash".to_owned()),
             window_class: Some("SyntheticWindowClass".to_owned()),
+            capability_profile: DesktopCapabilityProfile {
+                profile_id: "local-demo-profile".to_owned(),
+                assessed_at: now(),
+                tree_completeness: AccessibilityTreeCompleteness::VerifiedComplete,
+                semantic_actions: SemanticActionCapability::IrreversibleActionsWithConfirmation,
+                capture_time_phi_handling: CaptureTimePhiHandling::Verified,
+                visual_fallback: VisualFallbackCapability::Disabled,
+            },
             authorization: DesktopAuthorization {
                 authorized_by: "local-user".to_owned(),
                 authorized_at: now(),
@@ -908,6 +1067,62 @@ mod tests {
         assert!(matches!(
             result,
             Err(DesktopAutomationError::AuthorizationExpired(_))
+        ));
+    }
+
+    #[test]
+    fn blocks_non_macos_target_in_default_scope() {
+        let mut target = target_policy();
+        target.platform = DesktopPlatform::Windows;
+        let policy = DesktopAutomationPolicy::with_targets([target]);
+        let request = observation_request(target_id());
+
+        let result = policy.evaluate_observation_request(&request, now());
+
+        assert!(matches!(
+            result,
+            Err(DesktopAutomationError::PlatformOutOfScope { .. })
+        ));
+    }
+
+    #[test]
+    fn blocks_action_when_capability_profile_is_observe_only() {
+        let mut target = target_policy();
+        target.capability_profile.semantic_actions = SemanticActionCapability::ObserveOnly;
+        let policy = DesktopAutomationPolicy::with_targets([target]);
+        let action = DesktopActionKind::Click {
+            selector: semantic_selector(),
+        };
+
+        let result = policy.evaluate_proposal(&proposal(action), now());
+
+        assert!(matches!(
+            result,
+            Err(DesktopAutomationError::CapabilityProfileBlocksAction { .. })
+        ));
+    }
+
+    #[test]
+    fn blocks_observation_when_capability_profile_lacks_phi_capture() {
+        let mut target = target_policy();
+        target.capability_profile.capture_time_phi_handling = CaptureTimePhiHandling::Unknown;
+        let policy = DesktopAutomationPolicy::with_targets([target]);
+        let observation = DesktopObservation {
+            observation_id: "observation-1".to_owned(),
+            run_id: "run-1".to_owned(),
+            target_id: target_id(),
+            observed_at: now(),
+            mode: DesktopObservationMode::AccessibilityTree,
+            tree_completeness: AccessibilityTreeCompleteness::VerifiedComplete,
+            capture: DesktopCaptureSummary::phi_safe_without_raw_persistence(),
+            controls: vec![],
+        };
+
+        let result = policy.evaluate_observation(&observation);
+
+        assert!(matches!(
+            result,
+            Err(DesktopAutomationError::CapabilityProfileLacksPhiCapture(_))
         ));
     }
 }

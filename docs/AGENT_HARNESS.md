@@ -126,7 +126,7 @@ The harness may eventually operate user-authorized local desktop software in the
 
 Public Flekks EMR CLI documentation must stay vendor-neutral. Do not name or imply official integration with proprietary desktop medical or billing software unless the project has explicit permission and a reviewed integration strategy.
 
-The detailed interface and policy plan lives in [DESKTOP_AUTOMATION.md](DESKTOP_AUTOMATION.md). The first implementation boundary treats accessibility-tree completeness as a per-target policy gate, not just a process allowlist. Coordinate-only fallback is blocked by default and must never be used for signing, submission, export, deletion, finalization, or other irreversible actions.
+The detailed interface and policy plan lives in [DESKTOP_AUTOMATION.md](DESKTOP_AUTOMATION.md). The first implementation boundary should be macOS-first and treats accessibility-tree completeness as a per-target policy gate, not just a process allowlist. Coordinate-only fallback is blocked by default and must never be used for signing, submission, export, deletion, finalization, or other irreversible actions.
 
 Allowed public language:
 
@@ -146,6 +146,7 @@ All local automation must be:
 
 - user-authorized
 - window/process allowlisted
+- backed by a local capability profile
 - gated by accessibility-tree completeness
 - PHI-handled at capture time
 - auditable

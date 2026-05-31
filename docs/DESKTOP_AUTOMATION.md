@@ -11,15 +11,64 @@ The desktop automation framework is for user-authorized local applications. It
 may later let the agent observe a local window, propose a bounded action, wait
 for human approval, perform the action, and verify the result.
 
+The first implementation scope should be macOS-first. macOS accessibility
+authorization gives the project a clearer local permission model for early
+experiments, and limiting the first adapter to one platform avoids pretending
+that AXUIElement, Windows UI Automation, webviews, Electron shells, and
+custom-drawn canvases all expose equivalent control trees.
+
 The MVP deliverable is only:
 
 - a vendor-neutral design
 - minimal Rust interfaces for observation, proposals, approval, action, and verification
 - policy gates that can be wired into the agent harness later
+- macOS-oriented capability profiles for local applications, without naming or targeting proprietary products
 
 The MVP does not implement platform adapters, OCR, screenshots, autonomous
 clinical decisions, autonomous diagnosis, radiology review, or medical-image
 interpretation.
+
+Out of scope for the first adapter:
+
+- Windows UI Automation
+- Linux accessibility adapters
+- browser automation
+- coordinate-only action loops
+- OCR-driven action loops
+- public claims of compatibility with proprietary local software
+- autonomous signing, submission, export, deletion, or billing finalization
+
+## macOS-First Local Authorization
+
+macOS-first scope means the initial platform adapter should assume local user
+authorization through macOS privacy and accessibility controls, plus an
+application-level Flekks authorization record.
+
+Before observation or action, Flekks should require:
+
+- the user has granted the process local accessibility permission where required
+- the target is present in the local allowlist
+- the target has a capability profile
+- the run has an explicit local authorization record
+- the run has bounded step and wall-clock limits
+- the action class is allowed by both the target policy and the capability profile
+
+The authorization record should be stored locally and should not imply official
+compatibility, partnership, or endorsement by any software vendor.
+
+## Model Vendor BAA Boundary
+
+Desktop automation is local, but agent loops may eventually ask model vendors to
+help reason over redacted observations, draft documentation, or produce action
+plans. No PHI may be sent to any model vendor unless the local compliance registry
+has an executed BAA and local approval that covers the exact provider, account,
+service, and model.
+
+If a desktop observation, voice memo, note draft, screenshot, OCR result, or
+accessibility-tree capture could contain PHI, the model request must be blocked
+unless the BAA gate passes. Capture-time suppression or redaction is still
+required even when a BAA exists; the BAA gate is not a reason to persist raw PHI
+in prompts, traces, fixtures, logs, screenshots, issue comments, or examples.
 
 ## Core Loop
 
@@ -57,6 +106,28 @@ Coordinate-only proposals are high risk because they say "click this pixel" rath
 than "activate this reviewed control." Coordinate fallback is disabled by default
 and must never be used for signing, submission, export, deletion, finalization, or
 other irreversible actions.
+
+## Capability Profiles
+
+Each allowlisted local application needs a capability profile. The profile is a
+local safety claim about what the adapter can observe and act on for that target.
+It is not a public compatibility claim.
+
+A capability profile should include:
+
+- platform, initially `macOS`
+- process identity and optional executable hash
+- observed accessibility-tree completeness
+- whether semantic controls are stable enough for action proposals
+- whether capture-time PHI suppression or redaction is available
+- whether visual fallback is disabled, observe-only, or explicitly allowed later
+- which action classes are allowed
+- whether irreversible actions are disallowed or require human confirmation
+- last local verification timestamp
+
+If the capability profile is incomplete, stale, or below the target's required
+tree-completeness level, the agent should block action proposals and surface a
+local safety downgrade rather than falling back to coordinates or raw OCR.
 
 ## Target Allowlist
 
@@ -203,9 +274,9 @@ configures an allowlist for their own applications.
 
 Candidate adapter layers:
 
-- Windows UI Automation
-- macOS accessibility
-- Linux accessibility, if support is practical
+- macOS accessibility as the first adapter
+- Windows UI Automation later, behind the same policy tests
+- Linux accessibility later, if support is practical
 - OCR or screenshot fallback behind explicit policy gates
 
 No adapter should be merged until it has tests for target allowlisting,
