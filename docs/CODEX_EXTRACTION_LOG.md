@@ -1,12 +1,12 @@
 # Codex Extraction Log
 
-This log tracks any OpenAI Codex CLI source files copied, translated, or closely derived for Flekks EMR CLI.
+This log tracks any OpenAI Codex CLI source files copied, translated, or closely derived for Flekks EMR TUI.
 
 OpenAI Codex CLI repository: <https://github.com/openai/codex>
 
 License: Apache-2.0.
 
-Current status: Flekks EMR CLI includes small, attributed Codex-derived harness
+Current status: Flekks EMR TUI includes small, attributed Codex-derived harness
 files for the medical agent submission/event protocol and thread handle.
 
 ## Required Entry Format

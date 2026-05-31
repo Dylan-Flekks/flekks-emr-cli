@@ -1,8 +1,8 @@
-# Flekks EMR CLI
+# Flekks EMR TUI
 
-Flekks EMR CLI is an experimental, local-first medical documentation project for terminal-based charting, record review, note editing, documentation auditing, and billing support.
+Flekks EMR TUI is an experimental, local-first medical documentation project for terminal-based charting, record review, note editing, documentation auditing, and billing support.
 
-The project goal is a CLI-first medical records tool with a Ratatui dashboard. Medical storage is local by design. Cloud medical storage is out of scope. Optional AI integrations must pass an explicit BAA and compliance gate before any PHI can be sent to a third-party API.
+The project goal is a TUI-first medical records workspace with a Ratatui dashboard and a CLI command surface for setup, automation, and scripting. Medical storage is local by design. Cloud medical storage is out of scope. Optional AI integrations must pass an explicit BAA and compliance gate before any PHI can be sent to a third-party API.
 
 > This project is not a certified EHR, medical device, billing authority, or compliance guarantee. Do not use it for real patient care or real PHI until it has gone through professional security, legal, privacy, and clinical review.
 
@@ -17,8 +17,8 @@ The request asks for an agentic medical workflow harness with local agent loops,
 ## Product Direction
 
 - Local encrypted SQLite records.
-- CLI workflows for automation and power users.
-- Ratatui dashboard for chart review, note writing, auditing, and billing support.
+- TUI-first workflows for chart review, note writing, auditing, and billing support.
+- CLI commands for setup, automation, scripting, and launching the dashboard.
 - Structured medical records inspired by FHIR concepts.
 - Structured notes for SOAP, progress notes, H&P, discharge summaries, procedures, addenda, and billing documentation.
 - Documentation and billing audit checks.
@@ -53,7 +53,7 @@ compliance/
 
 ## Current Status
 
-This repository is in project bootstrap. The initial codebase defines the architecture, CLI/TUI entry points, core medical data models, and BAA enforcement primitives. It is not production-ready.
+This repository is in project bootstrap. The initial codebase defines the architecture, TUI/CLI entry points, core medical data models, and BAA enforcement primitives. It is not production-ready.
 
 ## Quick Start
 
@@ -82,15 +82,15 @@ cargo build -p med-store --no-default-features --features sqlcipher
 Medical data belongs outside the repository:
 
 ```text
-~/.medical-cli/          # default on Unix-like systems
-C:\Users\<you>\.medical-cli\  # default on Windows
+~/.flekks-emr-tui/          # default on Unix-like systems
+C:\Users\<you>\.flekks-emr-tui\  # default on Windows
   records.db
   attachments/
   backups/
   exports/
 ```
 
-Set `MEDCLI_DATA_DIR` to use another local directory.
+Set `FLEKKS_EMR_DATA_DIR` to use another local directory.
 
 Never commit real PHI, screenshots containing PHI, clinical exports, logs with patient identifiers, model prompts containing PHI, or vendor BAA documents.
 

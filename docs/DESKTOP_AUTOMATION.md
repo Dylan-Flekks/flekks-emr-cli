@@ -1,6 +1,6 @@
 # Vendor-Neutral Desktop Automation Framework
 
-This document defines the first desktop automation boundary for Flekks EMR CLI.
+This document defines the first desktop automation boundary for Flekks EMR TUI.
 It is intentionally generic. Public documentation and code must not name, target,
 or imply official compatibility with proprietary local applications unless the
 project has explicit permission and a reviewed integration plan.

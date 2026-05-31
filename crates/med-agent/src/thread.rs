@@ -10,7 +10,7 @@
 // Upstream license: Apache-2.0. See this repository's NOTICE and
 // docs/CODEX_EXTRACTION_LOG.md for attribution and modification notes.
 //
-// Modifications by Flekks EMR CLI contributors:
+// Modifications by Flekks EMR TUI contributors:
 // - converted the async Codex thread conduit into a small std-channel medical
 //   thread runtime that can be wired into the Ratatui dashboard later
 // - removed coding-agent config, shell execution, MCP, telemetry, and cloud task

@@ -99,7 +99,7 @@ This report maps `codex-rs/core`:
 - event stream
 
 At the time of this inventory report, no Codex source files had been copied into
-Flekks EMR CLI. The current copied-code status is tracked in
+Flekks EMR TUI. The current copied-code status is tracked in
 `docs/CODEX_EXTRACTION_LOG.md`.
 
 ## Report 02

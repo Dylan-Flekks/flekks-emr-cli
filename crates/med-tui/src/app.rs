@@ -703,7 +703,9 @@ fn age_on(date_of_birth: Date, today: Date) -> Option<u8> {
 }
 
 fn ai_status_from_env() -> AiStatus {
-    if std::env::var_os("MEDCLI_TUI_DEMO_AI_ALLOWED").is_some() {
+    if std::env::var_os("FLEKKS_EMR_TUI_DEMO_AI_ALLOWED").is_some()
+        || std::env::var_os("MEDCLI_TUI_DEMO_AI_ALLOWED").is_some()
+    {
         AiStatus::Allowed
     } else {
         AiStatus::Locked

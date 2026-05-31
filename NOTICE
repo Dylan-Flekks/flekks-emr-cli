@@ -1,5 +1,5 @@
-Flekks EMR CLI
-Copyright 2026 Flekks EMR CLI contributors
+Flekks EMR TUI
+Copyright 2026 Flekks EMR TUI contributors
 
 This project is licensed under the Apache License, Version 2.0.
 
@@ -18,11 +18,11 @@ Open-source source code and architecture references:
   Copyright (c) 2016-2022 Florian Dehau
   Copyright (c) 2023-2025 The Ratatui Developers
 
-  Flekks EMR CLI uses Codex as an architecture reference for agent/session
+  Flekks EMR TUI uses Codex as an architecture reference for agent/session
   separation, submission/event queues, tool registries, tool invocation
   context, approval gates, cancellation, and terminal UI testing patterns.
 
-  Flekks EMR CLI now includes small Codex-derived harness files. Each copied
+  Flekks EMR TUI now includes small Codex-derived harness files. Each copied
   or closely adapted file includes file-level attribution with the upstream
   repository, upstream commit, source path, license, and Flekks modification
   summary. The extraction log is maintained at:

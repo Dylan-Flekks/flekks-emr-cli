@@ -8,7 +8,7 @@
 // Upstream license: Apache-2.0. See this repository's NOTICE and
 // docs/CODEX_EXTRACTION_LOG.md for attribution and modification notes.
 //
-// Modifications by Flekks EMR CLI contributors:
+// Modifications by Flekks EMR TUI contributors:
 // - replaced Codex coding-agent operations with local medical workflow operations
 // - removed shell, patch, MCP, realtime, telemetry, and coding-workspace payloads
 // - added patient/encounter/note context, BAA state, PHI policy, and loop limits

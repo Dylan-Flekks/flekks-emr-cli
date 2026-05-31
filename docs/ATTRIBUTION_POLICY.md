@@ -1,6 +1,6 @@
 # Attribution Policy
 
-Flekks EMR CLI is Apache-2.0.
+Flekks EMR TUI is Apache-2.0.
 
 ## When Referencing Open Source Projects
 

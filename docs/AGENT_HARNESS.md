@@ -124,7 +124,7 @@ if request.contains_phi:
 
 The harness may eventually operate user-authorized local desktop software in the same way a user would interact with it: observe the screen/window, propose an action, request approval when needed, perform a bounded action, then verify state.
 
-Public Flekks EMR CLI documentation must stay vendor-neutral. Do not name or imply official integration with proprietary desktop medical or billing software unless the project has explicit permission and a reviewed integration strategy.
+Public Flekks EMR TUI documentation must stay vendor-neutral. Do not name or imply official integration with proprietary desktop medical or billing software unless the project has explicit permission and a reviewed integration strategy.
 
 The detailed interface and policy plan lives in [DESKTOP_AUTOMATION.md](DESKTOP_AUTOMATION.md). The first implementation boundary should be macOS-first and treats accessibility-tree completeness as a per-target policy gate, not just a process allowlist. Coordinate-only fallback is blocked by default and must never be used for signing, submission, export, deletion, finalization, or other irreversible actions.
 

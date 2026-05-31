@@ -1,6 +1,6 @@
 # Codex Extraction Plan
 
-This document describes how Flekks EMR CLI can use the open-source OpenAI Codex CLI codebase as a large implementation reference and possible source-code donor while keeping the medical product safe, attributed, and maintainable.
+This document describes how Flekks EMR TUI can use the open-source OpenAI Codex CLI codebase as a large implementation reference and possible source-code donor while keeping the medical product safe, attributed, and maintainable.
 
 OpenAI Codex CLI repository: <https://github.com/openai/codex>
 
@@ -12,13 +12,13 @@ adapted into `crates/med-agent` with Apache-2.0 attribution. See
 
 ## Strategic Decision
 
-The Codex CLI harness is too large to recreate quickly from scratch. A practical strategy is to import, map, and reduce an upstream-derived harness in a separate lab track, then move only vetted pieces into Flekks EMR CLI.
+The Codex CLI harness is too large to recreate quickly from scratch. A practical strategy is to import, map, and reduce an upstream-derived harness in a separate lab track, then move only vetted pieces into Flekks EMR TUI.
 
-Do not turn the main Flekks EMR CLI repository into a direct reduced fork on day one.
+Do not turn the main Flekks EMR TUI repository into a direct reduced fork on day one.
 
 Use two tracks:
 
-1. Flekks EMR CLI product repo: small, medical-specific, local-first, PHI-safe.
+1. Flekks EMR TUI product repo: small, medical-specific, local-first, PHI-safe.
 2. Codex extraction lab: large upstream fork/import used for mapping, deletion, adaptation, and experiments.
 
 The product repo should stay understandable to healthcare contributors. The lab can carry hundreds of thousands of upstream lines while the team learns the harness.
@@ -62,7 +62,7 @@ Purpose:
 
 Benefits:
 
-- keeps Flekks EMR CLI small
+- keeps Flekks EMR TUI small
 - preserves upstream attribution and history
 - makes license compliance easier
 - avoids burying the medical product under coding-agent files
@@ -118,10 +118,10 @@ openai/codex
   -> inventory and map harness modules
   -> delete irrelevant subsystems in lab branches
   -> define stable extraction interfaces
-  -> copy/adapt only selected files into Flekks EMR CLI with attribution
+  -> copy/adapt only selected files into Flekks EMR TUI with attribution
 ```
 
-The lab is where the hundreds of thousands of lines can exist. Flekks EMR CLI receives only the medically appropriate parts after they are understood.
+The lab is where the hundreds of thousands of lines can exist. Flekks EMR TUI receives only the medically appropriate parts after they are understood.
 
 ## Apache-2.0 Compliance Checklist
 
@@ -145,7 +145,7 @@ Derived from OpenAI Codex CLI.
 Original source: https://github.com/openai/codex
 Upstream license: Apache-2.0
 Upstream commit: <sha>
-Modified by Flekks EMR CLI contributors for local-first medical documentation workflows.
+Modified by Flekks EMR TUI contributors for local-first medical documentation workflows.
 ```
 
 Update:
@@ -526,7 +526,7 @@ flekks/policy-layer
 flekks/extraction-candidates
 ```
 
-Suggested branches in Flekks EMR CLI:
+Suggested branches in Flekks EMR TUI:
 
 ```text
 main
@@ -564,13 +564,13 @@ Each copied or closely derived file must have an entry:
 
 1. Create `flekks-codex-lab` as a fork or mirror of `openai/codex`.
 2. Generate `docs/codex-inventory/00-summary.md` from the lab checkout.
-3. Create `docs/CODEX_EXTRACTION_LOG.md` in Flekks EMR CLI before copying any code.
+3. Create `docs/CODEX_EXTRACTION_LOG.md` in Flekks EMR TUI before copying any code.
 
 Only after those tasks should code move from Codex into Flekks.
 
 ## Current Decision
 
-Flekks EMR CLI will continue building the medical TUI and local record system while the Codex lab maps the larger harness. The two efforts meet at stable interfaces:
+Flekks EMR TUI will continue building the medical TUI and local record system while the Codex lab maps the larger harness. The two efforts meet at stable interfaces:
 
 - medical chart tools
 - BAA-gated provider calls

@@ -26,8 +26,8 @@ body:
     attributes:
       label: Area
       options:
-        - CLI
         - TUI
+        - CLI automation
         - Storage
         - Notes
         - Audit

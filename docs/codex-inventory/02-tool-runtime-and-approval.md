@@ -7,7 +7,7 @@ C:\Users\peter\flekks-codex-lab
 docs/flekks-inventory/02-tool-runtime-and-approval.md
 ```
 
-No OpenAI Codex source files have been copied into Flekks EMR CLI for this report.
+No OpenAI Codex source files have been copied into Flekks EMR TUI for this report.
 
 ## What Was Mapped
 

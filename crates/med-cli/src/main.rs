@@ -10,7 +10,7 @@ use time::OffsetDateTime;
 
 #[derive(Debug, Parser)]
 #[command(name = "med")]
-#[command(about = "Local-first medical documentation CLI and TUI")]
+#[command(about = "Local-first medical documentation TUI with CLI automation")]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -237,16 +237,19 @@ fn initialize_local_data_dir() -> Result<LocalPaths> {
 
 fn open_store() -> Result<LocalStore> {
     let paths = initialize_local_data_dir()?;
-    let key = std::env::var("MEDCLI_DB_KEY")
+    let key = std::env::var("FLEKKS_EMR_DB_KEY")
+        .or_else(|_| std::env::var("MEDCLI_DB_KEY"))
         .unwrap_or_else(|_| "development-only-default-key-not-for-production-phi".to_owned());
 
     Ok(LocalStore::open_encrypted(paths.database, &key)?)
 }
 
 fn local_paths() -> Result<LocalPaths> {
-    let data_dir = match std::env::var_os("MEDCLI_DATA_DIR") {
+    let data_dir = match std::env::var_os("FLEKKS_EMR_DATA_DIR")
+        .or_else(|| std::env::var_os("MEDCLI_DATA_DIR"))
+    {
         Some(value) => PathBuf::from(value),
-        None => home_dir()?.join(".medical-cli"),
+        None => home_dir()?.join(".flekks-emr-tui"),
     };
 
     let database = data_dir.join("records.db");
@@ -262,7 +265,7 @@ fn home_dir() -> Result<PathBuf> {
         return Ok(PathBuf::from(home));
     }
 
-    anyhow::bail!("could not determine home directory; set MEDCLI_DATA_DIR")
+    anyhow::bail!("could not determine home directory; set FLEKKS_EMR_DATA_DIR")
 }
 
 fn parse_patient_id(value: &str) -> Result<PatientId> {

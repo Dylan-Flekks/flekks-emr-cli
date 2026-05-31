@@ -1,12 +1,12 @@
 # Architecture
 
-Flekks EMR CLI is designed as a CLI-first local medical records application with a Ratatui dashboard.
+Flekks EMR TUI is designed as a TUI-first local medical records application with a Ratatui dashboard and a CLI command surface for setup, automation, and scripting.
 
 ## Principles
 
 - Local-first: medical records are stored locally.
-- CLI-first: every important workflow should be possible without the dashboard.
 - TUI-first for daily use: Ratatui provides the main charting workspace.
+- CLI-accessible: important workflows should remain scriptable without opening the dashboard.
 - Storage is abstracted: the UI and CLI call services, not raw database code.
 - AI is optional and policy-gated.
 - No PHI is allowed in the repository.
@@ -58,7 +58,7 @@ med-ai
 The intended local data directory is outside the repository:
 
 ```text
-~/.medical-cli/
+~/.flekks-emr-tui/
   records.db
   attachments/
   backups/

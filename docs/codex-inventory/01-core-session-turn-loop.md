@@ -7,7 +7,7 @@ C:\Users\peter\flekks-codex-lab
 docs/flekks-inventory/01-core-session-turn-loop.md
 ```
 
-No OpenAI Codex source files have been copied into Flekks EMR CLI for this report. This is an architecture map for future extraction or rewrite work.
+No OpenAI Codex source files have been copied into Flekks EMR TUI for this report. This is an architecture map for future extraction or rewrite work.
 
 ## Source
 
