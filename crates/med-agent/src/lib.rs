@@ -6,8 +6,20 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use time::{Date, OffsetDateTime};
 
+pub mod desktop;
 pub mod tools;
 
+pub use desktop::{
+    AccessibilityTreeCompleteness, AutomationBounds, ControlRole, ControlSelector,
+    CoordinateFallbackPolicy, DesktopActionApproval, DesktopActionClass, DesktopActionIntent,
+    DesktopActionKind, DesktopActionProposal, DesktopActionProposer, DesktopActionResult,
+    DesktopActionRisk, DesktopActionStatus, DesktopActor, DesktopApprovalDecision,
+    DesktopAuthorization, DesktopAutomationError, DesktopAutomationPolicy, DesktopCaptureSummary,
+    DesktopObservation, DesktopObservationMode, DesktopObservationRequest, DesktopObserver,
+    DesktopPlatform, DesktopTargetId, DesktopTargetPolicy, DesktopVerification,
+    DesktopVerificationExpectation, DesktopVerificationRequest, DesktopVerificationStatus,
+    DesktopVerifier, IrreversibleActionKind, PhiCapturePolicy, ScreenRect, SensitiveValueRef,
+};
 pub use tools::{
     MedicalApprovalDecision, MedicalApprovalPolicy, MedicalToolContext, MedicalToolError,
     MedicalToolInvocation, MedicalToolOutput, MedicalToolPayload, MedicalToolRisk,
@@ -178,6 +190,9 @@ pub enum MedicalToolName {
     PrepareSuperbillDraft,
     CheckVendorBaa,
     DraftNoteWithOpenAi,
+    ObserveDesktopTarget,
+    ProposeDesktopAction,
+    VerifyDesktopState,
 }
 
 impl MedicalToolName {
@@ -200,6 +215,9 @@ impl MedicalToolName {
             Self::PrepareSuperbillDraft => "billing.prepare_superbill_draft",
             Self::CheckVendorBaa => "compliance.check_vendor_baa",
             Self::DraftNoteWithOpenAi => "ai.draft_note_with_openai",
+            Self::ObserveDesktopTarget => "desktop.observe_authorized_target",
+            Self::ProposeDesktopAction => "desktop.propose_action",
+            Self::VerifyDesktopState => "desktop.verify_state",
         }
     }
 }
@@ -250,6 +268,18 @@ impl MedicalToolRegistry {
         registry.register(MedicalToolSpec::outbound(
             MedicalToolName::DraftNoteWithOpenAi,
             "Draft documentation with OpenAI after BAA preflight",
+        ));
+        registry.register(MedicalToolSpec::reviewed_local(
+            MedicalToolName::ObserveDesktopTarget,
+            "Observe a user-authorized local desktop target",
+        ));
+        registry.register(MedicalToolSpec::reviewed_local(
+            MedicalToolName::ProposeDesktopAction,
+            "Propose a bounded local desktop action",
+        ));
+        registry.register(MedicalToolSpec::reviewed_local(
+            MedicalToolName::VerifyDesktopState,
+            "Verify a local desktop action result",
         ));
 
         registry
@@ -402,5 +432,29 @@ mod tests {
             outcome.planned_tools[0].name,
             MedicalToolName::DraftNoteWithOpenAi
         );
+    }
+
+    #[test]
+    fn plans_desktop_tools_as_reviewed_local_tools() {
+        let harness = MedicalAgentHarness::new();
+        let request = AgentTurnRequest {
+            instruction: "Observe an authorized local app and propose the next step".to_owned(),
+            contains_phi: false,
+            context_summary: None,
+            outbound_provider: None,
+            requested_tools: vec![
+                MedicalToolName::ObserveDesktopTarget,
+                MedicalToolName::ProposeDesktopAction,
+                MedicalToolName::VerifyDesktopState,
+            ],
+        };
+
+        let outcome = harness.start_turn(request, today()).unwrap();
+
+        assert_eq!(outcome.planned_tools.len(), 3);
+        assert!(outcome
+            .planned_tools
+            .iter()
+            .all(|tool| tool.requires_human_review));
     }
 }

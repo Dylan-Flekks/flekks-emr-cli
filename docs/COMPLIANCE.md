@@ -74,6 +74,10 @@ Audit events should cover:
 
 Local desktop automation must be generic and user-authorized. Public documentation should not name proprietary medical or billing software products unless explicit permission and a reviewed integration plan exist.
 
+Automation targets must be allowlisted by local policy and must meet the required accessibility-tree completeness for the proposed action. A process allowlist alone is not enough. If the accessibility tree is missing, partial, or unreliable, action proposals should block instead of silently falling back to raw OCR text or coordinates.
+
+PHI redaction or suppression must happen at capture time for accessibility trees, screenshots, OCR text, and any visual metadata. Raw captures containing PHI must not be persisted in logs, examples, fixtures, screenshots, issue comments, or public documentation.
+
 Automation must require human confirmation before submission, signing, export, deletion, or irreversible changes.
 
 ## Multimodal Data

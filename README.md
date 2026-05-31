@@ -15,10 +15,12 @@ The project goal is a CLI-first medical records tool with a Ratatui dashboard. M
 - Structured notes for SOAP, progress notes, H&P, discharge summaries, procedures, addenda, and billing documentation.
 - Documentation and billing audit checks.
 - Strict AI provider controls: no BAA, no PHI.
+- Vendor-neutral local desktop automation interfaces for future user-authorized workflows.
 - No PHI in GitHub issues, pull requests, logs, test fixtures, or example data.
 
 See [docs/TUI_DASHBOARD_PLAN.md](docs/TUI_DASHBOARD_PLAN.md) for the detailed dashboard build plan.
 See [docs/AGENT_HARNESS.md](docs/AGENT_HARNESS.md) for the medical agent harness plan.
+See [docs/DESKTOP_AUTOMATION.md](docs/DESKTOP_AUTOMATION.md) for the vendor-neutral desktop automation boundary.
 See [NOTICE](NOTICE) and [docs/ATTRIBUTION_POLICY.md](docs/ATTRIBUTION_POLICY.md) for attribution rules.
 
 ## Workspace
